@@ -84,6 +84,11 @@ plt.imshow(plot_img_rgb)
 plt.plot(
     [x for x, _ in actual_locations.values()],
     [y for _, y in actual_locations.values()],
-    ".",
+    ".r",
 )
+for begin, end in KEYPOINT_CONNECTIONS:
+    begin_x, begin_y = actual_locations[KEYPOINT_NAMES[begin]]
+    end_x, end_y = actual_locations[KEYPOINT_NAMES[end]]
+    plt.plot([begin_x, end_x], [begin_y, end_y], color="red")
+
 plt.show()
