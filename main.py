@@ -35,7 +35,13 @@ MODEL_PATH = "single-lightning.tflite"
 
 image = tf.io.read_file(IMAGE_PATH)
 image = tf.compat.v1.image.decode_jpeg(image)
+
+# Pyrefly spitting out nonsense about this perfectly fine function call.
+# type: ignore
 image = tf.expand_dims(image, axis=0)
+
+# Pyrefly spitting out nonsense about this perfectly fine function call.
+# type: ignore
 image = tf.image.resize_with_pad(image, INPUT_SIZE, INPUT_SIZE)
 
 interpreter = Interpreter(model_path=MODEL_PATH)
