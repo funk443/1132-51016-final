@@ -27,6 +27,16 @@ KEYPOINT_NAMES = [
     "left_knee", "right_knee",
     "left_ankle", "right_ankle",
 ]
+KEYPOINT_CONNECTIONS = [
+    (0, 1),   (0, 2),   # nose - eyes
+    (1, 3),   (2, 4),   # eyes - ears
+    (3, 5),   (4, 6),   # ears - shoulders
+    (5, 7),   (6, 8),   # shoulders - elbows
+    (7, 9),   (8, 10),  # elbows - wrists
+    (5, 11),  (6, 12),  # shoulders - hips
+    (11, 13), (12, 14), # hips - knees
+    (13, 15), (14, 16), # knees - ankles
+]
 # fmt: on
 
 
