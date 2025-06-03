@@ -73,36 +73,37 @@ def detect_pose_static_image(image_path: str) -> NDArray:
 
     return interpreter.get_tensor(output_details[0]["index"])
 
-input_image = tf.cast(image, dtype=tf.float32)
-input_details = interpreter.get_input_details()
-output_details = interpreter.get_output_details()
 
-interpreter.set_tensor(input_details[0]["index"], input_image.numpy())
-interpreter.invoke()
+def calculate_positions(
+    keypoints: NDArray,
+    image_shape: tuple[int, int, int],
+) -> tuple[PositionDict, PositionDict]:
+    image_y_size, image_x_size, _ = image_shape
+    normalized_positions: PositionDict = {}
+    actual_positions: PositionDict = {}
+    for i, data in enumerate(keypoints[0][0]):
+        keypoint_name = KEYPOINT_NAMES[i]
+        y, x, _ = data
+        normalized_positions[keypoint_name] = (x, y)
+        actual_positions[keypoint_name] = (image_x_size * x, image_y_size * y)
 
-keypoints = interpreter.get_tensor(output_details[0]["index"])
-normalized_locations: dict[str, tuple[float, float]] = {}
-for i, data in enumerate(keypoints[0][0]):
-    keypoint_name = KEYPOINT_NAMES[i]
-    y, x, _ = data
-    normalized_locations[keypoint_name] = (x, y)
+    return normalized_positions, actual_positions
 
+
+keypoints = detect_pose_static_image(IMAGE_PATH)
 plot_img = cv.imread(IMAGE_PATH)
 plot_img_rgb = cv.cvtColor(plot_img, cv.COLOR_BGR2RGB)
-plot_y_size, plot_x_size, _ = plot_img.shape
-actual_locations: dict[str, tuple[float, float]] = {}
-for name, (ratio_x, ratio_y) in normalized_locations.items():
-    actual_locations[name] = (plot_x_size * ratio_x, plot_y_size * ratio_y)
+_, actual_positions = calculate_positions(keypoints, plot_img_rgb.shape)
 
 plt.imshow(plot_img_rgb)
 plt.plot(
-    [x for x, _ in actual_locations.values()],
-    [y for _, y in actual_locations.values()],
+    [x for x, _ in actual_positions.values()],
+    [y for _, y in actual_positions.values()],
     ".r",
 )
 for begin, end in KEYPOINT_CONNECTIONS:
-    begin_x, begin_y = actual_locations[KEYPOINT_NAMES[begin]]
-    end_x, end_y = actual_locations[KEYPOINT_NAMES[end]]
+    begin_x, begin_y = actual_positions[KEYPOINT_NAMES[begin]]
+    end_x, end_y = actual_positions[KEYPOINT_NAMES[end]]
     plt.plot([begin_x, end_x], [begin_y, end_y], color="red")
 
 plt.show()
