@@ -1,0 +1,11 @@
+[tool.black]
+
+line-length = 80
+
+[tool.pyrefly]
+
+project_includes = ["**/*"]
+project_excludes = [
+    "**/.[!/.]*",
+    "**/*venv/**/*",
+]
