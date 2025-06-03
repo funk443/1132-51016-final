@@ -6,7 +6,7 @@
 # License, Version 2, as published by Sam Hocevar. See the COPYING file
 # for more details.
 
-import sys
+from argparse import ArgumentParser
 
 from ai_edge_litert.interpreter import Interpreter
 import tensorflow as tf
@@ -15,6 +15,22 @@ import numpy as np
 from numpy.typing import NDArray
 import matplotlib.pyplot as plt
 import cv2 as cv
+
+argparser = ArgumentParser()
+argparser.add_argument("--input",
+    action="append",
+    type=str,
+    required=True,
+    metavar="PATH",
+)
+argparser.add_argument("--model",
+    action="store",
+    default="./static/single-lightning.3.tflite",
+    type=str,
+    metavar="PATH",
+)
+
+INPUT_SIZE = 192
 
 # fmt: off
 KEYPOINT_NAMES = [
@@ -40,16 +56,10 @@ KEYPOINT_CONNECTIONS = [
 ]
 # fmt: on
 
-
-assert len(sys.argv) > 1
-INPUT_SIZE = 192
-IMAGE_PATH = sys.argv[1]
-MODEL_PATH = "./static/single-lightning.3.tflite"
-
 PositionDict = dict[str, tuple[float, float]]
 
 
-def detect_pose_static_image(image_path: str) -> NDArray:
+def detect_pose_static_image(image_path: str, interpreter: Interpreter) -> NDArray:
     image = tf.io.read_file(image_path)
     image = tf.compat.v1.image.decode_jpeg(image)
 
@@ -61,9 +71,7 @@ def detect_pose_static_image(image_path: str) -> NDArray:
     # type: ignore
     image = tf.image.resize_with_pad(image, INPUT_SIZE, INPUT_SIZE)
 
-    interpreter = Interpreter(model_path=MODEL_PATH)
     interpreter.allocate_tensors()
-
     input_image = tf.cast(image, dtype=tf.float32)
     input_details = interpreter.get_input_details()
     output_details = interpreter.get_output_details()
