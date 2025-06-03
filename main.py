@@ -98,20 +98,25 @@ def calculate_positions(
     return normalized_positions, actual_positions
 
 
-keypoints = detect_pose_static_image(IMAGE_PATH)
-plot_img = cv.imread(IMAGE_PATH)
-plot_img_rgb = cv.cvtColor(plot_img, cv.COLOR_BGR2RGB)
-_, actual_positions = calculate_positions(keypoints, plot_img_rgb.shape)
+if __name__ == "__main__":
+    argv = argparser.parse_args()
 
-plt.imshow(plot_img_rgb)
-plt.plot(
-    [x for x, _ in actual_positions.values()],
-    [y for _, y in actual_positions.values()],
-    ".r",
-)
-for begin, end in KEYPOINT_CONNECTIONS:
-    begin_x, begin_y = actual_positions[KEYPOINT_NAMES[begin]]
-    end_x, end_y = actual_positions[KEYPOINT_NAMES[end]]
-    plt.plot([begin_x, end_x], [begin_y, end_y], color="red")
+    interpreter = Interpreter(model_path=argv.model)
+    for image_path in argv.input:
+        keypoints = detect_pose_static_image(image_path, interpreter)
+        plot_img = cv.imread(image_path)
+        plot_img_rgb = cv.cvtColor(plot_img, cv.COLOR_BGR2RGB)
+        _, actual_positions = calculate_positions(keypoints, plot_img_rgb.shape)
 
-plt.show()
+        plt.imshow(plot_img_rgb)
+        plt.plot(
+            [x for x, _ in actual_positions.values()],
+            [y for _, y in actual_positions.values()],
+            ".r",
+        )
+        for begin, end in KEYPOINT_CONNECTIONS:
+            begin_x, begin_y = actual_positions[KEYPOINT_NAMES[begin]]
+            end_x, end_y = actual_positions[KEYPOINT_NAMES[end]]
+            plt.plot([begin_x, end_x], [begin_y, end_y], color="red")
+
+        plt.show()
