@@ -33,7 +33,7 @@ KEYPOINT_NAMES = [
 assert len(sys.argv) > 1
 INPUT_SIZE = 192
 IMAGE_PATH = sys.argv[1]
-MODEL_PATH = "single-lightning.tflite"
+MODEL_PATH = "./static/single-lightning.3.tflite"
 
 image = tf.io.read_file(IMAGE_PATH)
 image = tf.compat.v1.image.decode_jpeg(image)
