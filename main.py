@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import cv2 as cv
 import numpy as np
 
+# fmt: off
 KEYPOINT_NAMES = [
     "nose",
     "left_eye", "right_eye",
@@ -26,6 +27,7 @@ KEYPOINT_NAMES = [
     "left_knee", "right_knee",
     "left_ankle", "right_ankle",
 ]
+# fmt: on
 
 
 assert len(sys.argv) > 1
