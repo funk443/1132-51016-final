@@ -11,9 +11,10 @@ import sys
 from ai_edge_litert.interpreter import Interpreter
 import tensorflow as tf
 
+import numpy as np
+from numpy.typing import NDArray
 import matplotlib.pyplot as plt
 import cv2 as cv
-import numpy as np
 
 # fmt: off
 KEYPOINT_NAMES = [
@@ -45,19 +46,32 @@ INPUT_SIZE = 192
 IMAGE_PATH = sys.argv[1]
 MODEL_PATH = "./static/single-lightning.3.tflite"
 
-image = tf.io.read_file(IMAGE_PATH)
-image = tf.compat.v1.image.decode_jpeg(image)
+PositionDict = dict[str, tuple[float, float]]
 
-# Pyrefly spitting out nonsense about this perfectly fine function call.
-# type: ignore
-image = tf.expand_dims(image, axis=0)
 
-# Pyrefly spitting out nonsense about this perfectly fine function call.
-# type: ignore
-image = tf.image.resize_with_pad(image, INPUT_SIZE, INPUT_SIZE)
+def detect_pose_static_image(image_path: str) -> NDArray:
+    image = tf.io.read_file(image_path)
+    image = tf.compat.v1.image.decode_jpeg(image)
 
-interpreter = Interpreter(model_path=MODEL_PATH)
-interpreter.allocate_tensors()
+    # Pyrefly spitting out nonsense about this perfectly fine function call.
+    # type: ignore
+    image = tf.expand_dims(image, axis=0)
+
+    # Pyrefly spitting out nonsense about this perfectly fine function call.
+    # type: ignore
+    image = tf.image.resize_with_pad(image, INPUT_SIZE, INPUT_SIZE)
+
+    interpreter = Interpreter(model_path=MODEL_PATH)
+    interpreter.allocate_tensors()
+
+    input_image = tf.cast(image, dtype=tf.float32)
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
+    interpreter.set_tensor(input_details[0]["index"], input_image.numpy())
+    interpreter.invoke()
+
+    return interpreter.get_tensor(output_details[0]["index"])
 
 input_image = tf.cast(image, dtype=tf.float32)
 input_details = interpreter.get_input_details()
