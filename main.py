@@ -17,13 +17,15 @@ import matplotlib.pyplot as plt
 import cv2 as cv
 
 argparser = ArgumentParser()
-argparser.add_argument("--input",
+argparser.add_argument(
+    "--input",
     action="append",
     type=str,
     required=True,
     metavar="PATH",
 )
-argparser.add_argument("--model",
+argparser.add_argument(
+    "--model",
     action="store",
     default="./static/single-lightning.3.tflite",
     type=str,
@@ -59,7 +61,9 @@ KEYPOINT_CONNECTIONS = [
 PositionDict = dict[str, tuple[float, float]]
 
 
-def detect_pose_static_image(image_path: str, interpreter: Interpreter) -> NDArray:
+def detect_pose_static_image(
+    image_path: str, interpreter: Interpreter
+) -> NDArray:
     image = tf.io.read_file(image_path)
     image = tf.compat.v1.image.decode_jpeg(image)
 
