@@ -7,6 +7,7 @@
 # for more details.
 
 from argparse import ArgumentParser
+import math
 
 from ai_edge_litert.interpreter import Interpreter
 import tensorflow as tf
@@ -100,6 +101,30 @@ def calculate_positions(
         actual_positions[keypoint_name] = (image_x_size * x, image_y_size * y)
 
     return normalized_positions, actual_positions
+
+
+def calculate_angles(positions: PositionDict) -> tuple[float, float]:
+    def calculate_length(a: str, b: str) -> float:
+        return (
+            (positions[a][0] - positions[b][0]) ** 2
+            + (positions[a][1] - positions[b][1]) ** 2
+        ) ** 0.5
+
+    def calculate_angle_ac(a: float, b: float, c: float) -> float:
+        return math.acos((a**2 + c**2 - b**2) / (2 * a * c)) * 180 / math.pi
+
+    neck_length = calculate_length("left_shoulder", "left_ear")
+    back_length = calculate_length("left_shoulder", "left_hip")
+    lap_length = calculate_length("left_hip", "left_knee")
+
+    neck_angle = calculate_angle_ac(
+        back_length, calculate_length("left_ear", "left_hip"), neck_length
+    )
+    back_angle = calculate_angle_ac(
+        lap_length, calculate_length("left_shoulder", "left_knee"), back_length
+    )
+
+    return neck_angle, back_angle
 
 
 if __name__ == "__main__":
