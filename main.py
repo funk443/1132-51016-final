@@ -8,22 +8,30 @@
 
 from argparse import ArgumentParser
 import math
+import time
 
 from ai_edge_litert.interpreter import Interpreter
 import tensorflow as tf
 
 import numpy as np
 from numpy.typing import NDArray
+
 import matplotlib.pyplot as plt
 import cv2 as cv
 
 argparser = ArgumentParser()
-argparser.add_argument(
-    "--input",
+input_group = argparser.add_mutually_exclusive_group(required=True)
+input_group.add_argument(
+    "--input-image",
     action="append",
     type=str,
-    required=True,
     metavar="PATH",
+)
+input_group.add_argument(
+    "--stream-url",
+    action="store",
+    type=str,
+    metavar="URL",
 )
 argparser.add_argument(
     "--model",
@@ -64,11 +72,14 @@ KEYPOINT_CONNECTIONS = [
 PositionDict = dict[str, tuple[float, float]]
 
 
-def detect_pose_static_image(
-    image_path: str, interpreter: Interpreter
+def detect_pose(
+    raw_image: str | np.ndarray, interpreter: Interpreter
 ) -> NDArray:
-    image = tf.io.read_file(image_path)
-    image = tf.io.decode_jpeg(image)
+    if isinstance(raw_image, str):
+        image = tf.io.read_file(raw_image)
+        image = tf.io.decode_jpeg(raw_image)
+    elif isinstance(raw_image, np.ndarray):
+        image = tf.convert_to_tensor(raw_image)
 
     # Pyrefly spitting out nonsense about this perfectly fine function call.
     # type: ignore
@@ -133,21 +144,55 @@ if __name__ == "__main__":
     argv = argparser.parse_args()
 
     interpreter = Interpreter(model_path=argv.model)
-    for image_path in argv.input:
-        keypoints = detect_pose_static_image(image_path, interpreter)
-        plot_img = cv.imread(image_path)
-        plot_img_rgb = cv.cvtColor(plot_img, cv.COLOR_BGR2RGB)
-        _, actual_positions = calculate_positions(keypoints, plot_img_rgb.shape)
+    if argv.input_image is not None:
+        for image_path in argv.input_image:
+            image = cv.cvtColor(cv.imread(image_path), cv.COLOR_BGR2RGB)
 
-        plt.imshow(plot_img_rgb)
-        plt.plot(
-            [x for x, _ in actual_positions.values()],
-            [y for _, y in actual_positions.values()],
-            ".r",
-        )
-        for begin, end in KEYPOINT_CONNECTIONS:
-            begin_x, begin_y = actual_positions[KEYPOINT_NAMES[begin]]
-            end_x, end_y = actual_positions[KEYPOINT_NAMES[end]]
-            plt.plot([begin_x, end_x], [begin_y, end_y], color="red")
+            keypoints = detect_pose(image, interpreter)
+            _, actual_positions = calculate_positions(keypoints, image.shape)
+
+            fig, ax = plt.subplots()
+            ax.set_title(image_path)
+            ax.set_xticks([])
+            ax.set_yticks([])
+
+            ax.imshow(image)
+
+            keypoint_xs = [pos[0] for pos in actual_positions.values()]
+            keypoint_ys = [pos[1] for pos in actual_positions.values()]
+            ax.plot(keypoint_xs, keypoint_ys, "r.")
+
+            for begin, end in KEYPOINT_CONNECTIONS:
+                begin_name = KEYPOINT_NAMES[begin]
+                end_name = KEYPOINT_NAMES[end]
+                begin_x, begin_y = actual_positions[begin_name]
+                end_x, end_y = actual_positions[end_name]
+                ax.plot([begin_x, end_x], [begin_y, end_y], "r")
 
         plt.show()
+    elif argv.stream_url is not None:
+        cap = None
+        while cap is None:
+            cap = cv.VideoCapture(argv.stream_url)
+            time.sleep(1)
+
+        if not cap.isOpened():
+            print("ERROR: Failed to open video stream.")
+            cap.release()
+            exit(1)
+
+        try:
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    break
+
+                keypoints = detect_pose(frame, interpreter)
+                _, actual_positions = calculate_positions(
+                    keypoints, frame.shape
+                )
+                neck_angle, back_angle = calculate_angles(actual_positions)
+
+        finally:
+            cap.release()
+            cv.destroyAllWindows()
