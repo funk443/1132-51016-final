@@ -17,6 +17,8 @@ import numpy as np
 from numpy.typing import NDArray
 
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+
 import cv2 as cv
 
 argparser = ArgumentParser()
@@ -140,6 +142,19 @@ def calculate_angles(positions: PositionDict) -> tuple[float, float]:
     return neck_angle, back_angle
 
 
+def draw_skeleton(ax: Axes, actual_positions: PositionDict) -> None:
+    keypoint_xs = [pos[0] for pos in actual_positions.values()]
+    keypoint_ys = [pos[1] for pos in actual_positions.values()]
+    ax.plot(keypoint_xs, keypoint_ys, "r.")
+
+    for begin, end in KEYPOINT_CONNECTIONS:
+        begin_name = KEYPOINT_NAMES[begin]
+        end_name = KEYPOINT_NAMES[end]
+        begin_x, begin_y = actual_positions[begin_name]
+        end_x, end_y = actual_positions[end_name]
+        ax.plot([begin_x, end_x], [begin_y, end_y], "r")
+
+
 if __name__ == "__main__":
     argv = argparser.parse_args()
 
@@ -156,18 +171,9 @@ if __name__ == "__main__":
             ax.set_xticks([])
             ax.set_yticks([])
 
+            draw_skeleton(ax, actual_positions)
+
             ax.imshow(image)
-
-            keypoint_xs = [pos[0] for pos in actual_positions.values()]
-            keypoint_ys = [pos[1] for pos in actual_positions.values()]
-            ax.plot(keypoint_xs, keypoint_ys, "r.")
-
-            for begin, end in KEYPOINT_CONNECTIONS:
-                begin_name = KEYPOINT_NAMES[begin]
-                end_name = KEYPOINT_NAMES[end]
-                begin_x, begin_y = actual_positions[begin_name]
-                end_x, end_y = actual_positions[end_name]
-                ax.plot([begin_x, end_x], [begin_y, end_y], "r")
 
         plt.show()
     elif argv.stream_url is not None:
