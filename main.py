@@ -193,6 +193,11 @@ if __name__ == "__main__":
                 )
                 neck_angle, back_angle = calculate_angles(actual_positions)
 
+                draw_skeleton(frame, actual_positions)
+                cv.imshow("HHH", frame)
+                if cv.waitKey(1) == ord('q'):
+                    break
+
         finally:
             cap.release()
             cv.destroyAllWindows()
