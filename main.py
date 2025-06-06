@@ -150,16 +150,17 @@ def draw_skeleton(
     actual_positions: PositionDict,
     point_radius: int,
     line_thickness: int,
+    color: tuple[int, int, int] = (0, 0, 255),
 ) -> None:
     for point in actual_positions.values():
-        cv.circle(base, point, point_radius, (0, 0, 255), -1)
+        cv.circle(base, point, point_radius, color, -1)
 
     for begin, end in KEYPOINT_CONNECTIONS:
         begin_name = KEYPOINT_NAMES[begin]
         end_name = KEYPOINT_NAMES[end]
         begin_point = actual_positions[begin_name]
         end_point = actual_positions[end_name]
-        cv.line(base, begin_point, end_point, (0, 0, 255), line_thickness)
+        cv.line(base, begin_point, end_point, color, line_thickness)
 
 
 if __name__ == "__main__":
