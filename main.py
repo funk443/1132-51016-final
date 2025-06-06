@@ -174,13 +174,13 @@ def classify_pose(
     neck_angle: float, back_angle: float, warnings_count: int = 0
 ) -> Pose:
     result = Pose.GOOD
-    if (
-        neck_angle <= 160
-        and back_angle <= 80
-        and (warnings_count >= 10 or warnings_count < 0)
+    neck_criteria = 160 <= neck_angle <= 180
+    back_criteria = 80 <= back_angle <= 110
+    if (not neck_criteria or not back_criteria) and (
+        warnings_count >= 10 or warnings_count < 0
     ):
         result = Pose.BAD
-    elif neck_angle <= 160 or back_angle <= 80:
+    elif not neck_criteria or not back_criteria:
         result = Pose.WARNING
 
     return result
