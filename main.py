@@ -7,6 +7,7 @@
 # for more details.
 
 from argparse import ArgumentParser
+from enum import Enum
 import math
 import time
 
@@ -69,6 +70,12 @@ KEYPOINT_CONNECTIONS = [
 # fmt: on
 
 PositionDict = dict[str, tuple[float, float]]
+
+
+class Pose(Enum):
+    GOOD = 0
+    WARNING = 1
+    BAD = 2
 
 
 def detect_pose(
@@ -163,6 +170,22 @@ def draw_skeleton(
         cv.line(base, begin_point, end_point, color, line_thickness)
 
 
+def classify_pose(
+    neck_angle: float, back_angle: float, warnings_count: int = 0
+) -> Pose:
+    result = Pose.GOOD
+    if (
+        neck_angle <= 160
+        and back_angle <= 80
+        and (warnings_count >= 10 or warnings_count < 0)
+    ):
+        result = Pose.BAD
+    elif neck_angle <= 160 or back_angle <= 80:
+        result = Pose.WARNING
+
+    return result
+
+
 if __name__ == "__main__":
     argv = argparser.parse_args()
 
@@ -192,6 +215,7 @@ if __name__ == "__main__":
             exit(1)
 
         try:
+            warnings_count = 0
             while True:
                 ret, frame = cap.read()
                 if not ret:
@@ -203,8 +227,22 @@ if __name__ == "__main__":
                 )
                 neck_angle, back_angle = calculate_angles(actual_positions)
 
+                color = (0, 255, 0)
+                diagnostic = classify_pose(
+                    neck_angle, back_angle, warnings_count
+                )
+                if diagnostic == Pose.BAD:
+                    color = (0, 0, 255)
+                elif diagnostic == Pose.WARNING:
+                    color = (0, 255, 255)
+                    warnings_count += 1
+                else:
+                    warnings_count = 0
+
                 thickness = max(min(frame.shape[:2]) // 250, 1)
-                draw_skeleton(frame, actual_positions, thickness * 2, thickness)
+                draw_skeleton(
+                    frame, actual_positions, thickness * 2, thickness, color
+                )
                 cv.imshow("HHH", frame)
                 if cv.waitKey(1) == ord("q"):
                     break
