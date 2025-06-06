@@ -28,7 +28,7 @@ input_group.add_argument(
     metavar="PATH",
 )
 input_group.add_argument(
-    "--stream-url",
+    "--input-stream",
     action="store",
     type=str,
     metavar="URL",
@@ -203,10 +203,10 @@ if __name__ == "__main__":
             cv.imshow(image_path, image)
             cv.waitKey(0)
 
-    elif argv.stream_url is not None:
+    elif argv.input_stream is not None:
         cap = None
         while cap is None:
-            cap = cv.VideoCapture(argv.stream_url)
+            cap = cv.VideoCapture(argv.input_stream)
             time.sleep(1)
 
         if not cap.isOpened():
