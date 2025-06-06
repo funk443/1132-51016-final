@@ -126,7 +126,10 @@ def calculate_angles(positions: PositionDict) -> tuple[float, float]:
         ) ** 0.5
 
     def calculate_angle_ac(a: float, b: float, c: float) -> float:
-        return math.acos((a**2 + c**2 - b**2) / (2 * a * c)) * 180 / math.pi
+        temp = ((a**2 + c**2 - b**2) / (2 * a * c))
+        if temp > 1 or temp < -1:
+            temp = 1
+        return math.acos(temp) * 180 / math.pi
 
     neck_length = calculate_length("left_shoulder", "left_ear")
     back_length = calculate_length("left_shoulder", "left_hip")
