@@ -133,7 +133,7 @@ def calculate_angles(positions: PositionDict) -> tuple[float, float]:
         ) ** 0.5
 
     def calculate_angle_ac(a: float, b: float, c: float) -> float:
-        temp = (a**2 + c**2 - b**2) / (2 * a * c)
+        temp = (a**2 + c**2 - b**2) / max((2 * a * c), 0.0001)
         if temp > 1 or temp < -1:
             temp = 1
         return math.acos(temp) * 180 / math.pi
