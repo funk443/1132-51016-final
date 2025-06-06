@@ -126,7 +126,7 @@ def calculate_angles(positions: PositionDict) -> tuple[float, float]:
         ) ** 0.5
 
     def calculate_angle_ac(a: float, b: float, c: float) -> float:
-        temp = ((a**2 + c**2 - b**2) / (2 * a * c))
+        temp = (a**2 + c**2 - b**2) / (2 * a * c)
         if temp > 1 or temp < -1:
             temp = 1
         return math.acos(temp) * 180 / math.pi
@@ -145,16 +145,21 @@ def calculate_angles(positions: PositionDict) -> tuple[float, float]:
     return neck_angle, back_angle
 
 
-def draw_skeleton(base: NDArray, actual_positions: PositionDict) -> None:
+def draw_skeleton(
+    base: NDArray,
+    actual_positions: PositionDict,
+    point_radius: int,
+    line_thickness: int,
+) -> None:
     for point in actual_positions.values():
-        cv.circle(base, point, 10, (0, 0, 255), -1)
+        cv.circle(base, point, point_radius, (0, 0, 255), -1)
 
     for begin, end in KEYPOINT_CONNECTIONS:
         begin_name = KEYPOINT_NAMES[begin]
         end_name = KEYPOINT_NAMES[end]
         begin_point = actual_positions[begin_name]
         end_point = actual_positions[end_name]
-        cv.line(base, begin_point, end_point, (0, 0, 255), 5)
+        cv.line(base, begin_point, end_point, (0, 0, 255), line_thickness)
 
 
 if __name__ == "__main__":
@@ -169,7 +174,8 @@ if __name__ == "__main__":
             keypoints = detect_pose(image_rgb, interpreter)
             _, actual_positions = calculate_positions(keypoints, image.shape)
 
-            draw_skeleton(image, actual_positions)
+            thickness = max(min(image.shape[:2]) // 250, 1)
+            draw_skeleton(image, actual_positions, thickness * 2, thickness)
             cv.imshow(image_path, image)
             cv.waitKey(0)
 
@@ -196,9 +202,10 @@ if __name__ == "__main__":
                 )
                 neck_angle, back_angle = calculate_angles(actual_positions)
 
-                draw_skeleton(frame, actual_positions)
+                thickness = max(min(frame.shape[:2]) // 250, 1)
+                draw_skeleton(frame, actual_positions, thickness * 2, thickness)
                 cv.imshow("HHH", frame)
-                if cv.waitKey(1) == ord('q'):
+                if cv.waitKey(1) == ord("q"):
                     break
 
         finally:
