@@ -40,6 +40,12 @@ argparser.add_argument(
     type=str,
     metavar="PATH",
 )
+argparser.add_argument(
+    "--output-stream",
+    action="store",
+    type=str,
+    metavar="URL",
+)
 
 INPUT_SIZE = 192
 
@@ -214,6 +220,13 @@ if __name__ == "__main__":
             cap.release()
             exit(1)
 
+        if argv.output_stream is not None:
+            out = cv.VideoWriter(
+                argv.output_stream,
+                cv.VideoWriter_fourcc(*"MP4V"),
+                15,
+                (192, 192),
+            )
         try:
             warnings_count = 0
             while True:
@@ -243,10 +256,16 @@ if __name__ == "__main__":
                 draw_skeleton(
                     frame, actual_positions, thickness * 2, thickness, color
                 )
+                if argv.output_stream is not None:
+                    out.write(frame)
+                    continue
+
                 cv.imshow("HHH", frame)
                 if cv.waitKey(1) == ord("q"):
                     break
 
         finally:
             cap.release()
+            if argv.output_stream is not None:
+                out.release()
             cv.destroyAllWindows()
