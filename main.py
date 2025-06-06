@@ -68,7 +68,7 @@ def detect_pose_static_image(
     image_path: str, interpreter: Interpreter
 ) -> NDArray:
     image = tf.io.read_file(image_path)
-    image = tf.compat.v1.image.decode_jpeg(image)
+    image = tf.io.decode_jpeg(image)
 
     # Pyrefly spitting out nonsense about this perfectly fine function call.
     # type: ignore
